@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: order-service          # becomes the service name in Zipkin/Jaeger and a metric tag
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true            # adds /actuator/health/liveness and /readiness for k8s
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}   # every metric carries the service name
+  tracing:
+    sampling:
+      probability: 0.1           # 10% of traces in prod; 1.0 in dev
+  observations:
+    key-values:
+      env: prod
+
+# Where the spans go
+management.zipkin.tracing.endpoint: http://zipkin:9411/api/v2/spans
+
+# Trace ids in every log line. %X pulls from the MDC.
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]"
+  level:
+    org.springframework.web: INFO
+
+# Kubernetes probes (for reference)
+# livenessProbe:
+#   httpGet: { path: /actuator/health/liveness, port: 8080 }
+#   failureThreshold: 3
+#   periodSeconds: 10
+# readinessProbe:
+#   httpGet: { path: /actuator/health/readiness, port: 8080 }
+#   periodSeconds: 5

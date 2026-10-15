@@ -1,0 +1,8 @@
+id,name,dept,salary,join_date
+1,Alice,Eng,9000,2021-01-15
+2,Bob,Eng,8000,2022-03-01
+3,Carol,Eng,8000,2020-07-20
+4,Dan,Eng,not_a_number,2023-02-11
+5,Eve,Sales,6000,2019-11-30
+6,Frank,Sales,,2021-05-05
+7,Grace,Sales,6000,2022-08-19

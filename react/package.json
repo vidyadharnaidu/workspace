@@ -1,0 +1,25 @@
+{
+  "name": "react-interview-questions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "React 19 + TypeScript interview examples: type-checked and server-rendered",
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview",
+    "logic": "node 04_logic/pure_logic.js",
+    "typecheck": "tsc --noEmit",
+    "verify": "esbuild verify/render_test.tsx --bundle --platform=node --format=cjs --jsx=automatic --outfile=verify/.render_test.cjs --log-level=error && node verify/.render_test.cjs",
+    "components": "esbuild verify/run_components_and_props.tsx --bundle --platform=node --format=cjs --jsx=automatic --outfile=verify/.run_components_and_props.cjs --log-level=error && node verify/.run_components_and_props.cjs",
+    "check": "npm run logic && npm run typecheck && npm run verify"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "esbuild": "^0.25.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.7.0",
+    "vite": "^7.1.0"
+  }
+}

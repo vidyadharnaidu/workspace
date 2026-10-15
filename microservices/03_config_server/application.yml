@@ -1,0 +1,43 @@
+# ---------- the config server ----------
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/acme/service-config    # one repo, all services
+          default-label: main
+          search-paths: '{application}'                  # config/order-service/, config/payment-service/
+          clone-on-start: true
+          timeout: 10
+        # For a local demo use the native profile instead of git:
+        # native:
+        #   search-locations: classpath:/config
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,refresh,busrefresh
+
+# Served URLs:
+#   GET /order-service/default        -> order-service.yml + application.yml
+#   GET /order-service/prod           -> order-service-prod.yml wins over the two above
+#   GET /order-service/prod/feature-x -> the same, from branch feature-x
+
+---
+# ---------- what a CLIENT service puts in its own application.yml ----------
+# spring:
+#   application:
+#     name: order-service
+#   config:
+#     import: "optional:configserver:http://localhost:8888"   # optional: = still boot if the server is down
+#   cloud:
+#     config:
+#       fail-fast: true         # in prod prefer failing loudly over booting with wrong config
+#       retry:
+#         max-attempts: 6

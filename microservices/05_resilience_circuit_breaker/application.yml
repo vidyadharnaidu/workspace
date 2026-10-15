@@ -1,0 +1,68 @@
+resilience4j:
+  circuitbreaker:
+    instances:
+      paymentGateway:
+        sliding-window-type: COUNT_BASED      # or TIME_BASED (last N seconds)
+        sliding-window-size: 20               # look at the last 20 calls
+        minimum-number-of-calls: 10           # ...but do not judge before 10 (avoids 1/1 = 100%)
+        failure-rate-threshold: 50            # >= 50% failures -> OPEN
+        slow-call-duration-threshold: 2s
+        slow-call-rate-threshold: 50          # slow counts as failure: this is the one people forget
+        wait-duration-in-open-state: 10s      # stay OPEN this long, then HALF_OPEN
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        register-health-indicator: true
+        record-exceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+        ignore-exceptions:
+          - com.acme.CardDeclinedException    # a business "no" is NOT a failure - never trip on it
+
+  retry:
+    instances:
+      paymentGateway:
+        max-attempts: 3                       # 1 original + 2 retries
+        wait-duration: 200ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2     # 200ms, 400ms, 800ms
+        enable-randomized-wait: true          # jitter, so all clients do not retry in lockstep
+        retry-exceptions:
+          - java.io.IOException
+        ignore-exceptions:
+          - com.acme.CardDeclinedException
+
+  bulkhead:
+    instances:
+      paymentGateway:
+        max-concurrent-calls: 10
+        max-wait-duration: 50ms               # then fail fast rather than queue forever
+
+  ratelimiter:
+    instances:
+      paymentGateway:
+        limit-for-period: 100                 # 100 calls...
+        limit-refresh-period: 1s              # ...per second
+        timeout-duration: 0                   # do not wait for a permit, fail immediately
+
+  timelimiter:
+    instances:
+      paymentGateway:
+        timeout-duration: 3s
+        cancel-running-future: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,circuitbreakers,circuitbreakerevents,metrics
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoint:
+    health:
+      show-details: always      # /actuator/health shows each breaker's state
+
+# Turn Feign clients into circuit-broken clients (enables the `fallback` in 04):
+feign:
+  circuitbreaker:
+    enabled: true

@@ -1,0 +1,28 @@
+# ---------- the registry itself ----------
+server:
+  port: 8761
+
+spring:
+  application:
+    name: discovery-server
+
+eureka:
+  client:
+    register-with-eureka: false     # the registry does not register with itself...
+    fetch-registry: false           # ...and does not fetch a registry from anyone
+  server:
+    enable-self-preservation: false # false in dev so dead instances disappear fast; leave TRUE in prod
+
+---
+# ---------- what EVERY other service puts in its own application.yml ----------
+# spring:
+#   application:
+#     name: order-service           # this name IS the id others call with lb://ORDER-SERVICE
+# eureka:
+#   client:
+#     service-url:
+#       defaultZone: http://localhost:8761/eureka/
+#   instance:
+#     prefer-ip-address: true       # register the IP, not a hostname that may not resolve
+#     lease-renewal-interval-in-seconds: 10    # heartbeat every 10s (default 30)
+#     lease-expiration-duration-in-seconds: 30 # evict after 30s of silence (default 90)

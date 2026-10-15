@@ -1,0 +1,50 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      # Same routes as GatewayApplication, expressed as config. Pick one style, not both.
+      routes:
+        - id: orders
+          uri: lb://ORDER-SERVICE          # lb:// = resolve through service discovery
+          predicates:
+            - Path=/api/orders/**
+            - Method=GET,POST
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: ordersCb
+                fallbackUri: forward:/fallback/orders
+
+        - id: payments
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - StripPrefix=1
+            - name: RequestRateLimiter      # needs spring-boot-starter-data-redis-reactive
+              args:
+                redis-rate-limiter.replenishRate: 10   # 10 requests/second sustained
+                redis-rate-limiter.burstCapacity: 20   # bucket size, so bursts of 20 are ok
+
+      # CORS once here instead of in every service
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "https://app.example.com"
+            allowedMethods: [GET, POST, PUT, DELETE]
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway        # /actuator/gateway/routes lists the live routes
